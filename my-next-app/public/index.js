@@ -1,15 +1,15 @@
-console.log("script connected")
+console.log("script connected");
 
 document.addEventListener("DOMContentLoaded", () => {
-  // Fetch and display votes for each row
-  document.querySelectorAll(".vote-btn").forEach(button => {
-      const rowId = button.getAttribute("data-id");
-      fetchAndDisplayVotes(rowId);
+  // Fetch and display votes for all rows at once
+  fetchAndDisplayVotesForAll();
 
+  document.querySelectorAll(".vote-btn").forEach(button => {
       button.addEventListener("click", function() {
+          const rowId = this.getAttribute("data-id");
           const voteType = this.getAttribute("data-vote");
           
-          fetch('/vote', {
+          fetch('api/vote', {
               method: 'POST',
               headers: {
                   'Content-Type': 'application/json',
@@ -20,7 +20,7 @@ document.addEventListener("DOMContentLoaded", () => {
           .then(data => {
               console.log("Vote registered:", data);
               // Update vote counts after a vote is registered
-              fetchAndDisplayVotes(rowId);
+              fetchAndDisplayVotesForAll();
           })
           .catch((error) => {
               console.error('Error:', error);
@@ -29,12 +29,16 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 });
 
-function fetchAndDisplayVotes(rowId) {
-  fetch(`/votes/${rowId}`)
+function fetchAndDisplayVotesForAll() {
+  // Assuming the API is updated to accept a query parameter `ids` and return votes for those ids
+  const ids = Array.from({ length: 362 }, (_, i) => i).join(',');
+  fetch(`api/votes?ids=${ids}`)
   .then(response => response.json())
   .then(data => {
-      document.querySelector(`.vote-count-up[data-id="${rowId}"]`).textContent = data.up;
-      document.querySelector(`.vote-count-down[data-id="${rowId}"]`).textContent = data.down;
+      data.forEach(voteData => {
+          document.querySelector(`.vote-count-up[data-id="${voteData.id}"]`).textContent = voteData.up;
+          document.querySelector(`.vote-count-down[data-id="${voteData.id}"]`).textContent = voteData.down;
+      });
   })
   .catch((error) => {
       console.error('Error:', error);
